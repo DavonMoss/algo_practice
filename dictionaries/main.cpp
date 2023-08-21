@@ -5,6 +5,14 @@ struct key_value {
     int value;
 };
 
+struct sll_node {
+    key_value data;
+    sll_node* next;
+    sll_node() : data({'\0', 0}), next(nullptr) {}
+    sll_node(key_value d) : data(d), next(nullptr) {}
+    sll_node(key_value d, sll_node* n) : data(d), next(n) {}
+};
+
 class arr_dict {
 private:
     static const int STATIC_ARRAY_SIZE = 12;
@@ -181,7 +189,140 @@ public:
     }
 };
 
-int main(int argc, char** argv) {
+class sll_dict {
+private:
+    sll_node* head = nullptr;
+    sll_node* max_node = nullptr;
+    sll_node* min_node = nullptr;
+public:
+
+    sll_node* search(char key) {
+        sll_node* curr = head;
+	while(curr) {
+	    if(curr->data.key == key) {
+	        return curr;
+	    }
+	    curr = curr->next;
+	}
+
+	return nullptr;
+    }
+
+    void ins(key_value item) {
+        sll_node* node = new sll_node(item, head);
+	head = node;
+
+	//for min and max tracking
+	if(!max_node && !min_node) {
+	    max_node = node;
+	    min_node = node;
+	} else {
+	    if(node->data.key > max_node->data.key)
+	        max_node = node;
+	    if(node->data.key < min_node->data.key)
+	        min_node = node;
+	}
+    }
+
+    void del(sll_node* node) {
+	if(!head) {
+	    std::cout << "List empty" << std::endl;
+	}
+        else if (head == node) {
+	    head == nullptr;
+	    max_node = nullptr;
+	    min_node = nullptr;
+	} 
+	else {
+	    bool found = false;
+	    bool min_max_changed = false;
+            sll_node* curr = head;
+
+            //removing the node
+	    while(curr && curr->next) {
+	        if(curr->next == node) {
+		    std::cout << "Removing Node -> ";
+		    print_item(curr->next);
+           
+                    if(node == max_node || node == min_node) {
+		        min_node = head;
+			max_node = head;
+		    }
+
+		    //unlink node and save heap pointer to the data
+		    found = true;
+		    sll_node* removed_node = curr->next;
+	            curr->next = curr->next->next;
+
+                    //free the heap data
+		    delete removed_node;
+		    break;
+	        } else {
+	            curr = curr->next;
+		}
+	    }
+
+	    if (!found)
+                std::cout << "Node not in list, can't delete" << std::endl;
+
+	    //additional linear pass to update min/max. allows us to keep min()/max() constant
+	    curr = head;
+	    while (curr) {
+	        if(curr->data.key > max_node->data.key)
+		    max_node = curr;
+	        if(curr->data.key < min_node->data.key)
+		    min_node = curr;
+	        curr = curr->next;	
+	    }
+	}
+    }
+
+    sll_node* max() {
+        if(max_node){
+	    std::cout << "Max node by key -> ";
+	    print_item(max_node);
+            return max_node;
+	}
+
+	std::cout << "List empty, no max." << std::endl;
+        return nullptr;
+    }
+
+    sll_node* min() {
+        if(min_node){
+	    std::cout << "Min node by key -> ";
+	    print_item(min_node);
+            return min_node;
+	}
+
+	std::cout << "List empty, no min." << std::endl;
+        return nullptr;
+    }
+
+    sll_node* pred();
+    sll_node* succ();
+
+    static void print_item(sll_node* node) {
+	if(!node) {
+	    std::cout << "Node doesn't exist." << std::endl;
+	} else {
+	    std::cout << "[Node address: " << node;
+    	    std::cout << ", Next address: " << node->next;
+            std::cout << ", Node key: " << node->data.key;
+	    std::cout << ", Node value: " << node->data.value << "]" << std::endl;
+	}
+    }
+
+    void print() {
+        sll_node* curr = head;
+	while(curr) {
+	    print_item(curr);
+	    curr = curr->next;
+	}
+    }
+};
+
+void arr_dict_testing() {
     arr_dict* ad = new arr_dict();
 
     char key = 'a';
@@ -210,6 +351,54 @@ int main(int argc, char** argv) {
 
     std::cout << "succ" << std::endl;
     ad->print_item(ad->succ(ad->search('j')));
+}
+
+void sll_dict_testing() {
+    sll_dict* sd = new sll_dict();
+
+    char key = 'a';
+    for(int i = 0; i < 5; i++) {
+        sd->ins({(char)(key+i), i*5});
+    }
+
+    std::cout << "deleting b" << std::endl;
+    sd->del(sd->search('b'));
+    std::cout << "deleting x" << std::endl;
+    sd->del(sd->search('x'));
+
+    std::cout << "print it all" << std::endl;
+    sd->print();
+
+    std::cout << "finding c" << std::endl;
+    sd->print_item(sd->search('c'));
+
+    std::cout << "finding k" << std::endl;
+    sd->print_item(sd->search('k'));
+
+    std::cout << "1st min" << std::endl;
+    sd->print_item(sd->min());
+    std::cout << "1st max" << std::endl;
+    sd->print_item(sd->max());
+
+    // BUG: looks like e doesnt get deleted, and i think the max_node and min_node pointers aren't getting updated
+    std::cout << "deleting a" << std::endl;
+    sd->del(sd->search('a'));
+    std::cout << "deleting e" << std::endl;
+    sd->del(sd->search('e'));
+
+    std::cout << "print it all again" << std::endl;
+    sd->print();
+
+    std::cout << "2nd min" << std::endl;
+    sd->print_item(sd->min());
+    std::cout << "2nd max" << std::endl;
+    sd->print_item(sd->max());
+}
+
+int main(int argc, char** argv) {
+
+    //arr_dict_testing();
+    sll_dict_testing();
 
     return 0;
 }
