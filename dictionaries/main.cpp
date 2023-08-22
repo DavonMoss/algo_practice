@@ -229,26 +229,22 @@ public:
 	    std::cout << "List empty" << std::endl;
 	}
         else if (head == node) {
-	    head == nullptr;
-	    max_node = nullptr;
-	    min_node = nullptr;
+            if(!head->next) {
+		delete head;
+		head = nullptr;
+	    }
+	        
+	    sll_node* removed_node = head;
+	    head = head->next;
+            delete removed_node;
 	} 
 	else {
 	    bool found = false;
-	    bool min_max_changed = false;
             sll_node* curr = head;
 
             //removing the node
 	    while(curr && curr->next) {
 	        if(curr->next == node) {
-		    std::cout << "Removing Node -> ";
-		    print_item(curr->next);
-           
-                    if(node == max_node || node == min_node) {
-		        min_node = head;
-			max_node = head;
-		    }
-
 		    //unlink node and save heap pointer to the data
 		    found = true;
 		    sll_node* removed_node = curr->next;
@@ -264,43 +260,54 @@ public:
 
 	    if (!found)
                 std::cout << "Node not in list, can't delete" << std::endl;
+	}
 
-	    //additional linear pass to update min/max. allows us to keep min()/max() constant
-	    curr = head;
-	    while (curr) {
-	        if(curr->data.key > max_node->data.key)
-		    max_node = curr;
-	        if(curr->data.key < min_node->data.key)
-		    min_node = curr;
-	        curr = curr->next;	
-	    }
+	//additional linear pass to update min/max. allows us to keep min()/max() constant
+	sll_node* curr = head;
+	max_node = curr;
+	min_node = curr;
+	while (curr) {
+	    if(curr->data.key > max_node->data.key)
+	        max_node = curr;
+	    if(curr->data.key < min_node->data.key)
+		min_node = curr;
+	    curr = curr->next;	
 	}
     }
 
     sll_node* max() {
-        if(max_node){
-	    std::cout << "Max node by key -> ";
-	    print_item(max_node);
-            return max_node;
-	}
-
-	std::cout << "List empty, no max." << std::endl;
-        return nullptr;
+        return max_node;
     }
 
     sll_node* min() {
-        if(min_node){
-	    std::cout << "Min node by key -> ";
-	    print_item(min_node);
-            return min_node;
-	}
-
-	std::cout << "List empty, no min." << std::endl;
-        return nullptr;
+        return min_node;
     }
 
-    sll_node* pred();
-    sll_node* succ();
+    sll_node* pred(sll_node* node) {
+	sll_node* curr = head;
+	sll_node* bottom = min();
+
+        while(curr) {
+	    if(curr->data.key < node->data.key && curr->data.key > bottom->data.key)
+                bottom = curr;
+	    curr = curr->next;
+	}
+
+	return bottom;
+    }
+
+    sll_node* succ(sll_node* node) {
+	sll_node* curr = head;
+	sll_node* top = max();
+
+        while(curr) {
+	    if(curr->data.key > node->data.key && curr->data.key < top->data.key)
+                top = curr;
+	    curr = curr->next;
+	}
+
+	return top;
+    }
 
     static void print_item(sll_node* node) {
 	if(!node) {
@@ -315,6 +322,7 @@ public:
 
     void print() {
         sll_node* curr = head;
+	std::cout << "HEAD ==> ";
 	while(curr) {
 	    print_item(curr);
 	    curr = curr->next;
@@ -380,7 +388,6 @@ void sll_dict_testing() {
     std::cout << "1st max" << std::endl;
     sd->print_item(sd->max());
 
-    // BUG: looks like e doesnt get deleted, and i think the max_node and min_node pointers aren't getting updated
     std::cout << "deleting a" << std::endl;
     sd->del(sd->search('a'));
     std::cout << "deleting e" << std::endl;
@@ -393,6 +400,23 @@ void sll_dict_testing() {
     sd->print_item(sd->min());
     std::cout << "2nd max" << std::endl;
     sd->print_item(sd->max());
+
+    char keys[5] = {'r', 'x', 'S', '>', 'f'};
+    for(int i = 0; i < 5; i++) {
+        sd->ins({keys[i], i*7});
+    }
+
+    std::cout << "print it all again, and again" << std::endl;
+    sd->print();
+
+    std::cout << "predecessor of \'c\'" << std::endl;
+    sd->print_item(sd->pred(sd->search('c')));
+    std::cout << "predecessor of \'r\'" << std::endl;
+    sd->print_item(sd->pred(sd->search('r')));
+    std::cout << "successor of \'c\'" << std::endl;
+    sd->print_item(sd->succ(sd->search('c')));
+    std::cout << "successor of \'r\'" << std::endl;
+    sd->print_item(sd->succ(sd->search('r')));
 }
 
 int main(int argc, char** argv) {
