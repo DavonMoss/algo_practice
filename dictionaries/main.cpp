@@ -13,6 +13,15 @@ struct sll_node {
     sll_node(key_value d, sll_node* n) : data(d), next(n) {}
 };
 
+struct dll_node {
+    key_value data;
+    dll_node* next;
+    dll_node* prev;
+    dll_node() : data({'\0', 0}), next(nullptr), prev(nullptr) {}
+    dll_node(key_value d) : data(d), next(nullptr), prev(nullptr) {}
+    dll_node(key_value d, dll_node* n, dll_node* p) : data(d), next(n), prev(p) {}
+};
+
 class arr_dict {
 private:
     static const int STATIC_ARRAY_SIZE = 12;
@@ -330,6 +339,137 @@ public:
     }
 };
 
+class dll_dict {
+private:
+    dll_node* head = nullptr;
+    dll_node* max_node = nullptr;
+    dll_node* min_node = nullptr;
+public:
+
+    dll_node* search(char key) {
+        dll_node* curr = head;
+	while(curr) {
+	    if(curr->data.key == key) {
+	        return curr;
+	    }
+	    curr = curr->next;
+	}
+
+	return nullptr;
+    }
+
+    void ins(key_value item) {
+        dll_node* node = new dll_node(item);
+        if(!head) {
+	    head = node;
+	} else {
+	    node->next = head;
+	    head->prev = node;
+	    head = node;
+	}
+    }
+
+    void del(dll_node* node) {
+	if(!node) {
+	    std::cout << "Can't delete a nullptr silly" << std::endl;
+	}
+	else if(!head) {
+	    std::cout << "List empty" << std::endl;
+	}
+	else if (head == node) {
+	    if (!head->next) {
+		delete head;
+		head = nullptr;
+	    }
+	    dll_node* removed_node = head;
+	    head = head->next;
+	    delete removed_node;
+	    removed_node = nullptr;
+	} 
+	else {
+	    node->prev->next = node->next;
+            if(node->next) {
+	        node->next->prev = node->prev;
+	    }
+            delete node;
+            node = nullptr;	    
+	}
+    }
+
+    dll_node* max() {
+        dll_node* curr = head;
+	dll_node* max_node = head;
+
+        while(curr) {
+	    if(curr->data.key > max_node->data.key)
+	        max_node = curr;
+	    curr = curr->next;
+	}	
+
+        return max_node;
+    }
+
+    dll_node* min() {
+        dll_node* curr = head;
+	dll_node* min_node = head;
+
+        while(curr) {
+	    if(curr->data.key < min_node->data.key)
+	        min_node = curr;
+	    curr = curr->next;
+	}	
+
+        return min_node;
+    }
+
+    dll_node* pred(dll_node* node) {
+	dll_node* curr = head;
+	dll_node* bottom = min();
+
+        while(curr) {
+	    if(curr->data.key < node->data.key && curr->data.key > bottom->data.key)
+                bottom = curr;
+	    curr = curr->next;
+	}
+
+	return bottom;
+    }
+
+    dll_node* succ(dll_node* node) {
+	dll_node* curr = head;
+	dll_node* top = max();
+
+        while(curr) {
+	    if(curr->data.key > node->data.key && curr->data.key < top->data.key)
+                top = curr;
+	    curr = curr->next;
+	}
+
+	return top;
+    }
+
+    static void print_item(dll_node* node) {
+	if(!node) {
+	    std::cout << "Node doesn't exist." << std::endl;
+	} else {
+	    std::cout << "[Node address: " << node;
+    	    std::cout << ", Next address: " << node->next;
+    	    std::cout << ", Prev address: " << node->prev;
+            std::cout << ", Node key: " << node->data.key;
+	    std::cout << ", Node value: " << node->data.value << "]" << std::endl;
+	}
+    }
+
+    void print() {
+        dll_node* curr = head;
+	std::cout << "HEAD ==> ";
+	while(curr) {
+	    print_item(curr);
+	    curr = curr->next;
+	}
+    }
+};
+
 void arr_dict_testing() {
     arr_dict* ad = new arr_dict();
 
@@ -419,10 +559,72 @@ void sll_dict_testing() {
     sd->print_item(sd->succ(sd->search('r')));
 }
 
+void dll_dict_testing() {
+    dll_dict* dd = new dll_dict();
+
+    char key = 'a';
+    for(int i = 0; i < 5; i++) {
+        dd->ins({(char)(key+i), i*5});
+    }
+
+    std::cout << "initial print" << std::endl;
+    dd->print();
+
+    std::cout << "deleting b" << std::endl;
+    dd->del(dd->search('b'));
+    std::cout << "deleting x" << std::endl;
+    dd->del(dd->search('x'));
+
+    std::cout << "print it all" << std::endl;
+    dd->print();
+
+    std::cout << "finding c" << std::endl;
+    dd->print_item(dd->search('c'));
+
+    std::cout << "finding k" << std::endl;
+    dd->print_item(dd->search('k'));
+
+    std::cout << "1st min" << std::endl;
+    dd->print_item(dd->min());
+    std::cout << "1st max" << std::endl;
+    dd->print_item(dd->max());
+
+    std::cout << "deleting a" << std::endl;
+    dd->del(dd->search('a'));
+    std::cout << "deleting e" << std::endl;
+    dd->del(dd->search('e'));
+
+    std::cout << "print it all again" << std::endl;
+    dd->print();
+
+    std::cout << "2nd min" << std::endl;
+    dd->print_item(dd->min());
+    std::cout << "2nd max" << std::endl;
+    dd->print_item(dd->max());
+
+    char keys[5] = {'r', 'x', 'S', '>', 'f'};
+    for(int i = 0; i < 5; i++) {
+        dd->ins({keys[i], i*7});
+    }
+
+    std::cout << "print it all again, and again" << std::endl;
+    dd->print();
+
+    std::cout << "predecessor of \'c\'" << std::endl;
+    dd->print_item(dd->pred(dd->search('c')));
+    std::cout << "predecessor of \'r\'" << std::endl;
+    dd->print_item(dd->pred(dd->search('r')));
+    std::cout << "successor of \'c\'" << std::endl;
+    dd->print_item(dd->succ(dd->search('c')));
+    std::cout << "successor of \'r\'" << std::endl;
+    dd->print_item(dd->succ(dd->search('r')));
+}
+
 int main(int argc, char** argv) {
 
     //arr_dict_testing();
-    sll_dict_testing();
+    //sll_dict_testing();
+    dll_dict_testing();
 
     return 0;
 }
