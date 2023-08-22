@@ -1,10 +1,16 @@
 #include <iostream>
 
+/*
+ * KEY VALUE PAIR
+ * */
 struct key_value {
     char key;
     int value;
 };
 
+/*
+ * SINGLY LINKED LIST NODE
+ * */
 struct sll_node {
     key_value data;
     sll_node* next;
@@ -13,6 +19,9 @@ struct sll_node {
     sll_node(key_value d, sll_node* n) : data(d), next(n) {}
 };
 
+/*
+ * DOUBLY LINKED LIST NODE
+ * */
 struct dll_node {
     key_value data;
     dll_node* next;
@@ -22,24 +31,38 @@ struct dll_node {
     dll_node(key_value d, dll_node* n, dll_node* p) : data(d), next(n), prev(p) {}
 };
 
+/*
+ * STATIC ARRAY DICTIONARY
+ * ========================
+ * This implementation of a dictionary uses a static array to store elements. 
+ * The array is UNSORTED.
+ *
+ * MEMBER VARIABLES:
+ * - static const int STATIC_ARRAY_SIZE 	- Used to set the size of the array. 
+ *   						  Must be known at compile time so you can only change this in the source.
+ *
+ * - key_value data[STATIC_ARRAY_SIZE] 		- The array of key value pairs that make up this dictionary. 
+ *                                       	  Size is decided by variable above. 
+ *                                       	  All values in each key value pair are initialized to key = '\0' and value = 0; 
+ *
+ * - int next_free_space			- Used to track where new elements can be inserted. Updates automatically with insert and delete.
+ *
+ * MEMBER FUNCTIONS (detailed comments above each function definition):
+ * SIGNATURE				COMPLEXITY
+ * - key_value* search(char key) 	[O(n)]		
+ * - void ins(key_value item) 		[O(1)]
+ * - void del(key_value* item) 		[O(1)]
+ * - key_value* min() 			[O(n)]
+ * - key_value* max() 			[O(n)]
+ * - key_value* pred(key_value* item) 	[O(n)]
+ * - key_value* succ(key_value* item) 	[O(n)]
+ * */
 class arr_dict {
 private:
     static const int STATIC_ARRAY_SIZE = 12;
     key_value data[STATIC_ARRAY_SIZE] = {'\0', 0};
     int next_free_space = 0;    
 public:
-    /*
-     * HELPERS FOR TESTING STUFF.
-     * */
-    void print_index_address(int i) {
-        std::cout << "Address of arr_dict.data at " << i << " is " << &data[i] << "." << std::endl;
-    }
-    void print_item(key_value* item) {
-	std::cout << "[Index: " << (int)(item - &data[0]);
-	std::cout << ", Key: " << item->key;
-	std::cout << ", Value: " << item->value;
-	std::cout << ", Address: " << item << "]" << std::endl;
-    }
 
     /*
      * SEARCH [unsorted: O(n)]
@@ -189,22 +212,63 @@ public:
     }
 
     /*
-     * PRINTS CONTENTS OF EACH KEY-VALUE ELEMENT IN DICTIONARY.
+     * PRINT HELPERS FOR TESTING.
      * */
     void print() {
         for(int i = 0; i < STATIC_ARRAY_SIZE; i++) {
 	    print_item(&data[i]);
 	}
     }
+    void print_index_address(int i) {
+        std::cout << "Address of arr_dict.data at " << i << " is " << &data[i] << "." << std::endl;
+    }
+    void print_item(key_value* item) {
+	std::cout << "[Index: " << (int)(item - &data[0]);
+	std::cout << ", Key: " << item->key;
+	std::cout << ", Value: " << item->value;
+	std::cout << ", Address: " << item << "]" << std::endl;
+    }
 };
 
+/*
+ * SINGLY LINKED LIST DICTIONARY
+ * ========================
+ * This implementation of a dictionary uses a singly linked list to store elements. 
+ * The array is UNSORTED.
+ *
+ * MEMBER VARIABLES:
+ * - sll_node* head 		- Head of the list. Initialized to nullptr.
+ * - sll_node* max_node		- Used to keep track of node with highest key. Initialized to nullptr.
+ *   				  Updating is handled in the already linear delete method, so max()/min() remain constant.
+ * - sll_node* min_node		- Used to keep track of node with lowest key. Initialized to nullptr.
+ *
+ * MEMBER FUNCTIONS (detailed comments above each function definition):
+ * SIGNATURE				COMPLEXITY
+ * - sll_node* search(char key) 	[O(n)]		
+ * - void ins(key_value item) 		[O(1)]
+ * - void del(sll_node* node) 		[O(n)]
+ * - sll_node* min() 			[O(1)]
+ * - sll_node* max() 			[O(1)]
+ * - sll_node* pred(sll_node* node) 	[O(n)]
+ * - sll_node* succ(sll_node* node) 	[O(n)]
+ * */
 class sll_dict {
 private:
     sll_node* head = nullptr;
     sll_node* max_node = nullptr;
     sll_node* min_node = nullptr;
 public:
-
+    /*
+     * SEARCH [unsorted: O(n)]
+     *
+     * Returns a pointer to the node with 'key'. 
+     *
+     * Params:
+     * char key - the key of the node you are looking for
+     *
+     * Returns:
+     * Pointer to node with key. Returns nullptr if key is not found.
+     * */
     sll_node* search(char key) {
         sll_node* curr = head;
 	while(curr) {
@@ -217,6 +281,16 @@ public:
 	return nullptr;
     }
 
+    /*
+     * INSERT [unsorted: O(1)]
+     *
+     * Inserts a node using 'item' as the data. Appends to head of list for constant time insertion. 
+     * Also updates max_node and min_node accordingly based on value of new node key.
+     *
+     * Params:
+     * key_value item - The data you want to add to your list. A node will be created to hold this data.
+     *
+     * */
     void ins(key_value item) {
         sll_node* node = new sll_node(item, head);
 	head = node;
@@ -233,6 +307,16 @@ public:
 	}
     }
 
+    /*
+     * DELETE [unsorted: O(n)]
+     *
+     * Deletes the node from the list. Since this is singly linked and runtime MUST be linear, we slap the
+     * functionality of updating the max_node and min_node pointers on at the end, to keep min() and max() at O(1). 
+     *
+     * Params:
+     * sll_node* node - The node to delete.
+     *
+     * */
     void del(sll_node* node) {
 	if(!head) {
 	    std::cout << "List empty" << std::endl;
@@ -284,14 +368,44 @@ public:
 	}
     }
 
+    /*
+     * MAX [unsorted: O(1)]
+     *
+     * Gets the node with the maximum key. 
+     *
+     * Returns:
+     * The node with maximum key as tracked in insert()/delete().
+     *
+     * */
     sll_node* max() {
         return max_node;
     }
 
+    /*
+     * MIN [unsorted: O(1)]
+     *
+     * Gets the node with the minimum key. 
+     *
+     * Returns:
+     * The node with minimum key as tracked in insert()/delete().
+     *
+     * */
     sll_node* min() {
         return min_node;
     }
 
+    /*
+     * PREDECESSOR [unsorted: O(n)]
+     *
+     * Gets the node with the maximum key that is less than a given node. 
+     *
+     * Params:
+     * sll_node* node - The node to find the predecessor of.
+     *
+     * Returns:
+     * The predecessor of 'node' in terms of key.
+     *
+     * */
     sll_node* pred(sll_node* node) {
 	sll_node* curr = head;
 	sll_node* bottom = min();
@@ -305,6 +419,18 @@ public:
 	return bottom;
     }
 
+    /*
+     * SUCCESSOR [unsorted: O(n)]
+     *
+     * Gets the node with the minimum key that is greater than a given node. 
+     *
+     * Params:
+     * sll_node* node - The node to find the successor of.
+     *
+     * Returns:
+     * The successor of 'node' in terms of key.
+     *
+     * */
     sll_node* succ(sll_node* node) {
 	sll_node* curr = head;
 	sll_node* top = max();
@@ -318,6 +444,9 @@ public:
 	return top;
     }
 
+    /*
+     * PRINT HELPER FUNCTIONS FOR TESTING
+     * */
     static void print_item(sll_node* node) {
 	if(!node) {
 	    std::cout << "Node doesn't exist." << std::endl;
@@ -328,7 +457,6 @@ public:
 	    std::cout << ", Node value: " << node->data.value << "]" << std::endl;
 	}
     }
-
     void print() {
         sll_node* curr = head;
 	std::cout << "HEAD ==> ";
@@ -339,13 +467,40 @@ public:
     }
 };
 
+/*
+ * DOUBLY LINKED LIST DICTIONARY
+ * ========================
+ * This implementation of a dictionary uses a doubly linked list to store elements. 
+ * The array is UNSORTED. Note that if this were sorted it would perform wayyyy better.
+ *
+ * MEMBER VARIABLES:
+ * - dll_node* head 		- Head of the list. Initialized to nullptr.
+ *
+ * MEMBER FUNCTIONS (detailed comments above each function definition):
+ * SIGNATURE				COMPLEXITY
+ * - dll_node* search(char key) 	[O(n)]		
+ * - void ins(key_value item) 		[O(1)]
+ * - void del(dll_node* node) 		[O(1)]
+ * - dll_node* min() 			[O(n)]
+ * - dll_node* max() 			[O(n)]
+ * - dll_node* pred(dll_node* node) 	[O(n)]
+ * - dll_node* succ(dll_node* node) 	[O(n)]
+ * */
 class dll_dict {
 private:
     dll_node* head = nullptr;
-    dll_node* max_node = nullptr;
-    dll_node* min_node = nullptr;
 public:
-
+    /*
+     * SEARCH [unsorted: O(n)]
+     *
+     * Returns a pointer to the node with 'key'. 
+     *
+     * Params:
+     * char key - the key of the node you are looking for
+     *
+     * Returns:
+     * Pointer to node with key. Returns nullptr if key is not found.
+     * */
     dll_node* search(char key) {
         dll_node* curr = head;
 	while(curr) {
@@ -358,6 +513,15 @@ public:
 	return nullptr;
     }
 
+    /*
+     * INSERT [unsorted: O(1)]
+     *
+     * Inserts a node using 'item' as the data. Appends to head of list for constant time insertion. 
+     *
+     * Params:
+     * key_value item - The data you want to add to your list. A node will be created to hold this data.
+     *
+     * */
     void ins(key_value item) {
         dll_node* node = new dll_node(item);
         if(!head) {
@@ -369,6 +533,15 @@ public:
 	}
     }
 
+    /*
+     * DELETE [unsorted: O(1)]
+     *
+     * Deletes the node from the list.
+     *
+     * Params:
+     * sll_node* node - The node to delete.
+     *
+     * */
     void del(dll_node* node) {
 	if(!node) {
 	    std::cout << "Can't delete a nullptr silly" << std::endl;
@@ -396,6 +569,15 @@ public:
 	}
     }
 
+    /*
+     * MAX [unsorted: O(n)]
+     *
+     * Gets the node with the maximum key. 
+     *
+     * Returns:
+     * The node with maximum key.
+     *
+     * */
     dll_node* max() {
         dll_node* curr = head;
 	dll_node* max_node = head;
@@ -409,6 +591,15 @@ public:
         return max_node;
     }
 
+    /*
+     * MIN [unsorted: O(n)]
+     *
+     * Gets the node with the minimum key. 
+     *
+     * Returns:
+     * The node with minimum key.
+     *
+     * */
     dll_node* min() {
         dll_node* curr = head;
 	dll_node* min_node = head;
@@ -422,6 +613,17 @@ public:
         return min_node;
     }
 
+    /*
+     * PREDECESSOR [unsorted: O(n)]
+     *
+     * Returns a pointer to the node with the key that is immediately less than the key of a given item.
+     *
+     * Params:
+     * dll_node* node - the node to find the key predecessor of
+     *
+     * Returns:
+     * Pointer to node with predecessor by key.
+     * */
     dll_node* pred(dll_node* node) {
 	dll_node* curr = head;
 	dll_node* bottom = min();
@@ -435,6 +637,17 @@ public:
 	return bottom;
     }
 
+    /*
+     * SUCCESSOR [unsorted: O(n)]
+     *
+     * Returns a pointer to the node with the key that is immediately greater than the key of a given item.
+     *
+     * Params:
+     * dll_node* node - the node to find the key successor of
+     *
+     * Returns:
+     * Pointer to node with successor by key.
+     * */
     dll_node* succ(dll_node* node) {
 	dll_node* curr = head;
 	dll_node* top = max();
@@ -448,6 +661,9 @@ public:
 	return top;
     }
 
+    /*
+     * PRINT HELPERS FOR TESTING
+     * */
     static void print_item(dll_node* node) {
 	if(!node) {
 	    std::cout << "Node doesn't exist." << std::endl;
@@ -459,7 +675,6 @@ public:
 	    std::cout << ", Node value: " << node->data.value << "]" << std::endl;
 	}
     }
-
     void print() {
         dll_node* curr = head;
 	std::cout << "HEAD ==> ";
@@ -470,6 +685,9 @@ public:
     }
 };
 
+/*
+ * TESTING CODE FOR ARRAY DICTIONARY
+ * */
 void arr_dict_testing() {
     arr_dict* ad = new arr_dict();
 
@@ -501,6 +719,9 @@ void arr_dict_testing() {
     ad->print_item(ad->succ(ad->search('j')));
 }
 
+/*
+ * TESTING CODE FOR SINGLY LINKED LIST DICTIONARY
+ * */
 void sll_dict_testing() {
     sll_dict* sd = new sll_dict();
 
@@ -559,6 +780,9 @@ void sll_dict_testing() {
     sd->print_item(sd->succ(sd->search('r')));
 }
 
+/*
+ * TESTING CODE FOR DOUBLY LINKED LIST DICTIONARY
+ * */
 void dll_dict_testing() {
     dll_dict* dd = new dll_dict();
 
@@ -620,10 +844,13 @@ void dll_dict_testing() {
     dd->print_item(dd->succ(dd->search('r')));
 }
 
+/*
+ * MAIN
+ * */
 int main(int argc, char** argv) {
 
-    //arr_dict_testing();
-    //sll_dict_testing();
+    arr_dict_testing();
+    sll_dict_testing();
     dll_dict_testing();
 
     return 0;

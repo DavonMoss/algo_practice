@@ -1,1 +1,5 @@
-Repository to keep track of implementations as I work through algorithms textbook.
+Repository to keep track of implementations/exercises as I work through 'The Algorithm Design Manual' (S. Skiena, 3rd Ed.).
+
+DICTIONARIES:
+
+Implemented an unsorted dictionary data structure using 3 different storage methods: static array, singly linked list, and doubly linked list. Each implementation covers 7 core functions: search(), insert(), delete(), min(), max(), predecessor(), successor(). Adhered to target time complexities as described in textbook.  
