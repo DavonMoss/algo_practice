@@ -2,4 +2,8 @@ Repository to keep track of implementations/exercises as I work through 'The Alg
 
 DICTIONARIES:
 
-Implemented an unsorted dictionary data structure using 3 different storage methods: static array, singly linked list, and doubly linked list. Each implementation covers 7 core functions: search(), insert(), delete(), min(), max(), predecessor(), successor(). Adhered to target time complexities as described in textbook.  
+Implemented an unsorted dictionary data structure using 3 different storage methods: static array, singly linked list, and doubly linked list. Each implementation covers 7 core functions: search(), insert(), delete(), min(), max(), predecessor(), successor(). Adhered to target time complexities as described in textbook. 
+
+BINARY SEARCH TREES:
+
+Implemented a binary search tree. Covered core functions of search() , insert(), delete(), min(), max(), predecessor(), successor(), and traversal(). Adhered to target time complexities as described in textbook. 
